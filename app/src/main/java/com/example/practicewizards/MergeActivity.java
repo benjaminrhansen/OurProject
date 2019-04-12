@@ -29,6 +29,7 @@ import com.google.android.gms.vision.face.Face;
 import com.google.android.gms.vision.face.FaceDetector;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
+import com.squareup.picasso.MemoryPolicy;
 import com.squareup.picasso.Picasso;
 
 import java.io.File;
@@ -116,8 +117,12 @@ public class MergeActivity extends AppCompatActivity {
         bitmaps.clear();
         bitmaps = null;  // Help GC
 
-        Log.d(TAG, "Selfie width: " + selfieBitmap.getWidth());
-        Log.d(TAG, "Selfie height: " + selfieBitmap.getHeight());
+        // Convert height and width to DP to test the common height and width of a selfie
+        Log.d(TAG, "Cropped Selfie width: " + Merge.convertPxtoDp(this,
+                selfieBitmap.getWidth()));
+        Log.d(TAG, "Cropped Selfie height: " + Merge.convertPxtoDp(this,
+                selfieBitmap.getHeight()));
+
         Log.d(TAG, "Group Path: " + groupFileName);
         Log.d(TAG, "Selfie Path: " + selfieFileName);
         try {
@@ -130,6 +135,65 @@ public class MergeActivity extends AppCompatActivity {
         mergeBackgroundHandler.post(new Runnable() {
             @Override
             public void run() {
+                final Bitmap redBitmap = Merge.createRedBitmap(selfieBitmap);
+                final ImageView selfieImageView = findViewById(R.id.selfieTestView);
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        selfieImageView.setImageBitmap(redBitmap);
+                        //redGrayBitmap.recycle();
+                    }
+                });
+
+                // Lets see what the different grayscaled bitmap functions could return
+                // Create a temporary bitmap so we don't lose original selfie bitmap image
+                final Bitmap redGrayBitmap = Merge.createGrayScale(redBitmap);
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        selfieImageView.setImageBitmap(redGrayBitmap);
+                        //redGrayBitmap.recycle();
+                    }
+                });
+
+                final Bitmap blueBitmap = Merge.createBlueBitmap(selfieBitmap);
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        selfieImageView.setImageBitmap(blueBitmap);
+                        //redGrayBitmap.recycle();
+                    }
+                });
+
+                final Bitmap blueGrayBitmap = Merge.createGrayScale(blueBitmap);
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        selfieImageView.setImageBitmap(blueGrayBitmap);
+                        //blueGrayBitmap.recycle();
+                    }
+                });
+
+                final Bitmap greenBitmap = Merge.createGreenBitmap(selfieBitmap);
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        selfieImageView.setImageBitmap(greenBitmap);
+                        //redGrayBitmap.recycle();
+                    }
+                });
+
+                // Try green
+                final Bitmap greenGrayBitmap =  Merge.createGrayScale(greenBitmap);
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        selfieImageView.setImageBitmap(greenGrayBitmap);
+                        //greenGrayBitmap.recycle();
+                    }
+                });
+
+
                 FileOutputStream fOut = null;
                 // Try to create a file output stream
                 try {
@@ -153,6 +217,8 @@ public class MergeActivity extends AppCompatActivity {
                 }
             }
         });
+
+        /*
         mergeBackgroundHandler.post(new Runnable() {
             @Override
             public void run() {
@@ -166,7 +232,7 @@ public class MergeActivity extends AppCompatActivity {
                         // result of the Picasso resize in cache
                         Picasso.with(getApplicationContext())
                                 .load(new File(mergedSelfieFileName))
-                                //.memoryPolicy(MemoryPolicy.NO_CACHE, MemoryPolicy.NO_STORE)
+                                .memoryPolicy(MemoryPolicy.NO_CACHE, MemoryPolicy.NO_STORE)
                                 .resizeDimen(R.dimen.size1, R.dimen.size1)
                                 .onlyScaleDown()
                                 .into(selfieTestView);
@@ -174,7 +240,10 @@ public class MergeActivity extends AppCompatActivity {
                 });
             }
         });
+        */
 
+
+        /*
         //For Group Bitmap File
         mergeBackgroundHandler.post(new Runnable() {
             @Override
@@ -225,6 +294,7 @@ public class MergeActivity extends AppCompatActivity {
                 });
             }
         });
+        */
 
         // Set scaleDown button to invisible by default, can't scale down from size1. No size0.
         findViewById(R.id.scaleDown).setVisibility(Button.INVISIBLE);
@@ -470,6 +540,7 @@ public class MergeActivity extends AppCompatActivity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
+        CacheManager.deleteCache(this); // See if this will prevent a crash in the future
     }
 
     /**
